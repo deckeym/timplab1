@@ -5,7 +5,7 @@ import { ClipLoader } from "react-spinners";
 
 function Home() {
   const navigate = useNavigate();
-  const { threats, loading, error } = useThreats();
+  const { threats, loading, error, isAdmin, isGuest } = useThreats();
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
@@ -24,8 +24,8 @@ function Home() {
   if (error) {
     return (
       <div style={{ padding: "20px" }}>
-        <h2 style={{ color: "red" }}>Ошибка {error.status || ""}</h2>
-        <p>{error.message || "Не удалось загрузить список угроз"}</p>
+        <h2 style={{ color: "red" }}>Ошибка</h2>
+        <p>{error || "Не удалось загрузить список инцидентов"}</p>
       </div>
     );
   }
@@ -37,23 +37,38 @@ function Home() {
         <button onClick={handleLogout}>Выйти</button>
       </div>
 
-      <h1>Список интернет-угроз</h1>
+      <h1>
+        {isAdmin || isGuest
+          ? "Все инциденты информационной безопасности"
+          : "Мои инциденты информационной безопасности"}
+      </h1>
 
-      <Link to="/add">
-        <button>Добавить угрозу</button>
-      </Link>
+      {!isGuest && (
+        <Link to="/add">
+          <button>Добавить инцидент</button>
+        </Link>
+      )}
 
       {threats.length === 0 ? (
-        <p>Список угроз пуст</p>
+        <p>{isAdmin || isGuest ? "Список инцидентов пуст" : "У вас пока нет инцидентов"}</p>
       ) : (
         <div style={{ marginTop: "20px" }}>
           {threats.map((threat) => (
-            <div key={threat.id} style={{ border: "1px solid #ccc", padding: "15px", marginBottom: "15px", borderRadius: "8px" }}>
+            <div
+              key={threat.id}
+              style={{
+                border: "1px solid #ccc",
+                padding: "15px",
+                marginBottom: "15px",
+                borderRadius: "8px"
+              }}
+            >
               <h3>{threat.title}</h3>
               <p><b>Статус:</b> {threat.status}</p>
-              <p><b>Тип:</b> {threat.type}</p>
-              <p><b>Состояние:</b> {threat.condition}</p>
-              <p><b>Дата последней проверки:</b> {threat.lastChecked}</p>
+              <p><b>Категория:</b> {threat.category}</p>
+              <p><b>Критичность:</b> {threat.severity}</p>
+              <p><b>Дата и время обнаружения:</b> {threat.detectedAt}</p>
+              <p><b>Владелец:</b> {threat.ownerUsername}</p>
 
               <Link to={`/detail/${threat.id}`}>
                 <button>Подробнее</button>

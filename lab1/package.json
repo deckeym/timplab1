@@ -8,6 +8,9 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.14.0",
+    "concurrently": "^9.1.2",
+    "json-server": "^1.0.0-beta.3",
+    "nodemailer": "^6.10.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.0",
@@ -17,6 +20,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "server": "json-server --watch db.json --port 5000",
+    "notifier": "node notifier.js",
+    "dev:all": "concurrently \"npm run server\" \"npm run notifier\" \"npm start\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
