@@ -1,0 +1,89 @@
+:root {
+  --bg: #ffffff;
+  --surface: #fff5f5;
+  --text: #1a1a1a;
+  --accent: #c1121f;
+  --accent-dark: #8b0000;
+  --border: #d90429;
+}
+
+* {
+  box-sizing: border-box;
+  border-radius: 0 !important;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-image: linear-gradient(180deg, #ffffff 0%, #fff5f5 100%);
+}
+
+a {
+  color: var(--accent-dark);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--accent-dark);
+  margin-top: 0;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent-dark);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: var(--accent-dark);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #ef233c;
+  outline-offset: 1px;
+}
+
+table,
+th,
+td {
+  border-color: var(--border) !important;
+}
+
+[style*='border: 1px solid #ccc'] {
+  border-color: var(--border) !important;
+  background: var(--surface);
+}

@@ -1,70 +1,107 @@
-# Getting Started with Create React App
+# lab1: SPA + REST API + JWT
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Проект реализует учет инцидентов ИБ (threats) с авторизацией, ролями и CRUD-операциями.
 
-## Available Scripts
+## 1. Проектирование базы данных
 
-In the project directory, you can run:
+Выбрана реляционная СУБД: SQLite (SQL-схема в `server/db/schema.sql`).
 
-### `npm start`
+### Сущности и связи
+- `users` (1) -> (N) `threats`
+- `users`: поля для авторизации и ролей.
+- `threats`: бизнес-сущность инцидента.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Схема
+- `users(id, username, email, password_hash, role, created_at)`
+- `threats(id, title, status, category, severity, source, detected_by, affected_asset, responsible, description, impact, response, detected_at, resolved_at, reporter, comment, owner_id, owner_username, notification_email, status_reminder_sent, created_at, updated_at)`
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 2. REST API
 
-### `npm test`
+Базовый URL: `http://localhost:5000/api`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Auth
+- `POST /auth/register` -> `201`, `400`, `409`, `500`
+- `POST /auth/login` -> `200`, `400`, `401`, `500`
+- `POST /auth/refresh` -> `200`, `401`, `500`
+- `POST /auth/logout` -> `200`
+- `GET /auth/validate` -> `200`, `401`
 
-### `npm run build`
+### Threats
+- `GET /threats?page=1&limit=5&status=&category=&search=` -> `200`, `401`, `500`
+- `GET /threats/:id` -> `200`, `401`, `403`, `404`, `500`
+- `POST /threats` -> `201`, `400`, `401`, `403`, `500`
+- `PUT /threats/:id` -> `200`, `400`, `401`, `403`, `404`, `500`
+- `DELETE /threats/:id` (admin) -> `204`, `401`, `403`, `404`, `500`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Формат запросов/ответов: JSON.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 3. SPA
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+React SPA с роутингом:
+- `/login`
+- `/register`
+- `/dashboard`
+- `/profile`
+- `/detail/:id`
+- `/add`
+- `/edit/:id`
 
-### `npm run eject`
+Реализовано:
+- Авторизация и регистрация.
+- Сохранение access token в `localStorage`.
+- Refresh token в `httpOnly` cookie.
+- Защищенные роуты через `PrivateRoute`.
+- CRUD для `threats`.
+- Пагинация (`page`, `limit`) и фильтрация (`status`, `category`, `search`).
+- Обработка ошибок сервера на UI.
+- Перехват `401/403` через axios interceptor.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 4. Безопасность
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### JWT и хранение токенов
+- `localStorage`: просто использовать, но уязвимо к XSS.
+- `httpOnly cookie`: недоступна JS, снижает риск кражи токена через XSS.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+В проекте используется комбинированная схема:
+- Access token: `localStorage` (короткий срок жизни).
+- Refresh token: `httpOnly`, `SameSite=Lax` cookie.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Продление сессии
+- Endpoint `/auth/refresh` выдает новый access token и обновляет refresh token.
 
-## Learn More
+### CSRF/XSS
+- `SameSite=Lax` для refresh cookie.
+- Проверка и валидация входных данных на backend.
+- Рекомендация: дополнительно подключить CSP и экранирование пользовательского HTML (если появится рендер HTML).
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Пароли
+- Хранение только в виде `bcrypt`-хэша (`bcryptjs`, salt rounds 12).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 5. Деплой и интеграция
 
-### Code Splitting
+### Локальный запуск
+1. `cp .env.example .env`
+2. `npm install`
+3. `npm run dev:all`
+4. Frontend: `http://localhost:3000`, API: `http://localhost:5000/api`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Тестовые пользователи после первого запуска:
+- `admin / admin123`
+- `guest / guest123`
+- `user / user123`
 
-### Analyzing the Bundle Size
+### Docker
+1. `cp .env.example .env`
+2. `docker compose up --build`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### CI/CD
+GitHub Actions: `.github/workflows/ci.yml`
+- Установка зависимостей.
+- Запуск тестов (`npm run test:ci`) при push/pull request.
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Скриншоты
+Для отчета добавьте скриншоты:
+- login/register
+- dashboard (список, фильтры, пагинация)
+- detail/add/edit
+- profile
