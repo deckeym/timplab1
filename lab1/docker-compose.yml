@@ -1,12 +1,30 @@
 version: '3.9'
 services:
-  app:
-    build: .
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
     ports:
-      - '3000:3000'
       - '5000:5000'
     env_file:
       - .env
     volumes:
       - .:/app
       - /app/node_modules
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - backend
